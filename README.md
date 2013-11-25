@@ -5,7 +5,7 @@ This is a test project to experiment with physX3 update loop and the kinematic a
 * [3DGameStudio](http://www.3dgamestudio.com/)
 * [NVidia's PhysX-SDK-3.3-beta-2](https://developer.nvidia.com/rdp/physx-downloads)
 * Create a file named Variables.props
-<pre>
+```xml
     <?xml version="1.0" encoding="utf-8"?> 
     <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
       <ImportGroup Label="PropertySheets" />
@@ -26,4 +26,4 @@ This is a test project to experiment with physX3 update loop and the kinematic a
         </BuildMacro>
       </ItemGroup>
     </Project>
-</pre>
+```
