@@ -4,4 +4,4 @@ This is a test project to experiment with physX3 update loop and the kinematic a
 ##Dependencies
 * [3DGameStudio](http://www.3dgamestudio.com/)
 * [NVidia's PhysX-SDK-3.3-beta-2](https://developer.nvidia.com/rdp/physx-downloads)
-* [Create a file named Variables.props](wiki/Variables.props)
+* [Create a file named Variables.props](https://github.com/finalherizo/GSPhysXUpdate/wiki/Variables.props)
