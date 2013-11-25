@@ -1,7 +1,15 @@
 #pragma once
 
-#define DegreeToRadian(fDegrees) (0.01745329251994329576923690768489f * fDegrees) // PI / 180
-#define RadianToDegree(fRadian) (57.295779513082320876798154814105f * fRadian)	// 180 / PI
+#define CONV_DEGTORAD(fDegrees) (0.01745329251994329576923690768489f * fDegrees) // PI / 180
+#define CONV_RADTODEG(fRadian) (57.295779513082320876798154814105f * fRadian)	// 180 / PI
+
+#define PX_RELEASE(sys) if (NULL != sys) {sys->release(); sys = NULL;}
+
+#define PX_DELETE(sys) if (NULL != sys) {delete sys; sys = NULL;}
+
+// Substepping mode
+#define PX_TIMESTEP_FIXED 0
+#define PX_TIMESTEP_VARIABLE 1
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX

@@ -68,7 +68,8 @@
     </Link>
     <PostBuildEvent>
       <Command>"$(GstudioDir)\WED.EXE" -p "$(TargetPath)"
-copy $(PhysX3_SDKs_Dir)\Bin\Win32\PhysX3*.dll $(OutDir)</Command>
+copy $(PhysX3_SDKs_Dir)\Bin\Win32\PhysX3*.dll $(OutDir)
+copy $(PhysX3_SDKs_Dir)\Bin\Win32\nvToolsExt32_1.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,7 +95,8 @@ copy $(PhysX3_SDKs_Dir)\Bin\Win32\PhysX3*.dll $(OutDir)</Command>
     </Link>
     <PostBuildEvent>
       <Command>"$(GstudioDir)\WED.EXE" -p "$(TargetPath)"
-copy $(PhysX3_SDKs_Dir)\Bin\Win32\PhysX3*.dll $(OutDir)</Command>
+copy $(PhysX3_SDKs_Dir)\Bin\Win32\PhysX3*.dll $(OutDir)
+copy $(PhysX3_SDKs_Dir)\Bin\Win32\nvToolsExt32_1.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
