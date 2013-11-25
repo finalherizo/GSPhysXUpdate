@@ -25,9 +25,6 @@ bool Stepper::advance(PhysX3Util *physX3, physx::PxReal dt)
 	// Move character controllers
 	for (currentSubstep = 0; currentSubstep < mNbSubSteps; currentSubstep++)
 	{
-		// Update kinematics based on buffered pos
-		physX3->UpdateKinematics();
-
 		scene->simulate(mSubStepSize);
 		scene->fetchResults(true);
 	}

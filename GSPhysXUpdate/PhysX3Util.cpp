@@ -20,7 +20,8 @@ PhysX3Util::PhysX3Util(void) :
 	mFixedStepper(new FixedStepper(mDeltaTime, 8)),
 	mVariableStepper(new VariableStepper(1.0f / 80.0f, 1.0f / 40.0f, 8)),
 	mScale(1 / 40.0f),
-	mDefaultGravity(physx::PxVec3(0.0f, -9.81f, 0.0f))
+	mDefaultGravity(physx::PxVec3(0.0f, -9.81f, 0.0f)),
+	mUseActiveTransforms(false)
 {
 	#ifdef _DEBUG
 		mUsePVD = true;
@@ -191,44 +192,60 @@ void PhysX3Util::Run(float deltaTime)
 /// \brief Update properties
 void PhysX3Util::Update(void)
 {
-	// Retrieve array of actors that moved
-	physx::PxU32 nbActiveTransforms;
-	const physx::PxActiveTransform* activeTransforms = mScene->getActiveTransforms(nbActiveTransforms, physx::PX_DEFAULT_CLIENT);
-
-	if (nbActiveTransforms)
+	if (mUseActiveTransforms)
 	{
-		// Transform each actor
-		for (physx::PxU32 i = 0; i < nbActiveTransforms; i++)
+		// Retrieve array of actors that moved
+		physx::PxU32 nbActiveTransforms;
+		const physx::PxActiveTransform* activeTransforms = mScene->getActiveTransforms(nbActiveTransforms, physx::PX_DEFAULT_CLIENT);
+	
+		if (nbActiveTransforms)
 		{
-			physx::PxActor *actor = activeTransforms[i].actor;
-			
-			// Skip actors owned by foreign clients
-			if (physx::PX_DEFAULT_CLIENT == actor->getOwnerClient())
+			// Transform each actor
+			for (physx::PxU32 i = 0; i < nbActiveTransforms; i++)
 			{
-				// Treat actor differently depending on actor type
-				// Update only if shape is static_rigid or static_dynamic
-				switch(actor->getType())
+				physx::PxActor *actor = activeTransforms[i].actor;
+			
+				// Skip actors owned by foreign clients
+				if (physx::PX_DEFAULT_CLIENT == actor->getOwnerClient())
 				{
-				case physx::PxActorType::eRIGID_STATIC:
-				case physx::PxActorType::eRIGID_DYNAMIC:
+					// Treat actor differently depending on actor type
+					// Update only if shape is static_rigid or static_dynamic
+					switch(actor->getType())
+					{
+					case physx::PxActorType::eRIGID_STATIC:
+					case physx::PxActorType::eRIGID_DYNAMIC:
 					
-					// Update entities from rigid actor
-					TransformRigidEntity((physx::PxRigidActor *)actor);
-					break;
+						// Update entities from rigid actor
+						TransformRigidEntity((physx::PxRigidActor *)actor);
+						break;
 
-	#if PX_USE_PARTICLE_SYSTEM_API
-				case physx::PxActorType::ePARTICLE_SYSTEM:
-				case physx::PxActorType::ePARTICLE_FLUID:
-	#endif
+		#if PX_USE_PARTICLE_SYSTEM_API
+					case physx::PxActorType::ePARTICLE_SYSTEM:
+					case physx::PxActorType::ePARTICLE_FLUID:
+		#endif
 
-	#if PX_USE_CLOTH_API
-				case physx::PxActorType::eCLOTH:
-	#endif
-				default:
-					break;
+		#if PX_USE_CLOTH_API
+					case physx::PxActorType::eCLOTH:
+		#endif
+					default:
+						break;
+					}
 				}
 			}
 		}
+	}
+	else
+	{
+		int nbActors = mScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
+		physx::PxActor **buffer = new physx::PxActor*[nbActors];
+		mScene->getActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC, buffer, nbActors);
+
+		for (int i = 0; i < nbActors; i++)
+		{
+			TransformRigidEntity((physx::PxRigidActor *)buffer[i]);
+		}
+
+		delete[] buffer;
 	}
 }
 
@@ -274,7 +291,7 @@ void PhysX3Util::CreateGroundPlane()
 }
 
 /// \brief Create box kinematic from entity
-void PhysX3Util::CreateKinematic(ENTITY *entity)
+physx::PxRigidDynamic *PhysX3Util::CreateKinematic(ENTITY *entity)
 {
 	// Current entity transform
 	physx::PxQuat entityRotation;
@@ -309,16 +326,39 @@ void PhysX3Util::CreateKinematic(ENTITY *entity)
 
 	physx::PxRigidBodyExt::updateMassAndInertia(*(physx::PxRigidBody *)boxActor, 1.0f);
 	boxActor->setRigidDynamicFlag(physx::PxRigidDynamicFlag::eKINEMATIC, true);
+
+	mScene->addActor(*boxActor);
+
+	return boxActor;
 }
 
 /// \brief Move a kinematic body
-void PhysX3Util::MoveKinematic(ENTITY *entity, const physx::PxVec3 &disp)
+void PhysX3Util::MoveKinematic(ENTITY *entity, VECTOR *disp)
 {
-}
+	// Get entity's actor
+	physx::PxRigidDynamic *kine = (physx::PxRigidDynamic *) entity->body;
 
-/// \brief Update kinematic body to buffered position
-void PhysX3Util::UpdateKinematics()
-{
+	if (NULL == kine)
+		return;
+
+	// Create global position from absolute and relative vectors
+	physx::PxVec3 localPos;
+	physx::PxTransform actorGlobalPose(physx::PxIdentity);
+
+	PxVec3ForVec(localPos, disp);
+		
+	// Transform relative vector to global based on actor type
+	if (kine->getKinematicTarget(actorGlobalPose) == false) {
+		actorGlobalPose = kine->getGlobalPose();
+	}
+
+	// Get rotated local pose
+	localPos = actorGlobalPose.q.rotate(localPos);
+
+	// Add Localpose to Global pose
+	actorGlobalPose.p += localPos;
+
+	kine->setKinematicTarget(actorGlobalPose);
 }
 
 /// \brief Apply physX entity transform to 3dgs entity

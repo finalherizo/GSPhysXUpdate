@@ -36,6 +36,9 @@ public:
 	bool			mUseFixedStepper;
 	FixedStepper	*mFixedStepper;
 	VariableStepper	*mVariableStepper;
+
+	// Update type
+	bool mUseActiveTransforms;	// Use active transforms or query all bodies
 #ifdef _DEBUG	
 	bool mUsePVD;
 
@@ -57,8 +60,8 @@ public:
 	void SetDeltaTime(physx::PxReal dt) {mDeltaTime = dt;};
 	void TransformRigidEntity(physx::PxRigidActor *);
 	void CreateGroundPlane();
-	void CreateKinematic(ENTITY *entity);
-	void MoveKinematic(ENTITY *entity, const physx::PxVec3 &disp);
+	physx::PxRigidDynamic *CreateKinematic(ENTITY *entity);
+	void MoveKinematic(ENTITY *entity, VECTOR *disp);
 	void UpdateKinematics();
 
 	/// \brief Populate a pre initialized 3dgs vector from a PxVec3
@@ -217,6 +220,12 @@ public:
 
 		min = physx::PxVec3(_FLOAT(vMin.x), _FLOAT(vMin.z), _FLOAT(vMin.y)) * this->mScale;
 		max = physx::PxVec3(_FLOAT(vMax.x), _FLOAT(vMax.z), _FLOAT(vMax.y)) * this->mScale;
+	}
+
+	/// \brief Set update mode by using active transforms or not
+	void SetUseActiveTransforms(bool use)
+	{
+		mUseActiveTransforms = use;
 	}
 };
 
