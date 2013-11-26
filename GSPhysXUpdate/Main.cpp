@@ -61,7 +61,7 @@ int main()
 	while(av(key_esc) == 0 && engine_frame())
 	{
 		// Step physX
-		physX3->Run(_FLOAT(av(time_frame)));
+		physX3->Run(_FLOAT(av(time_frame)) / 16);
 
 		// Get input
 		float force_x = (_FLOAT(av(key_cuu)) - _FLOAT(av(key_cud))) * 6.0f;
