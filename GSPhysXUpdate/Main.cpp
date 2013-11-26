@@ -108,7 +108,7 @@ int main()
 		printf("K(%f, %f, %f)\n", actorSpeed.x, actorSpeed.y, actorSpeed.z);
 		VECTOR kineSpeed; 
 		physX3->PxVec3ToVec(actorSpeed, &kineSpeed);
-		//draw_text(_chr(str_printf(NULL, "Speed : (%f, %f, %f)", _FLOAT(kineSpeed.z), _FLOAT(kineSpeed.y), _FLOAT(kineSpeed.z))), _VAR(0), _VAR(120), (COLOR *)vector(0, 0, _VAR(255)));
+		draw_text(_chr(str_printf(NULL, "Speed : (%f, %f, %f)", _FLOAT(kineSpeed.x), _FLOAT(kineSpeed.y), _FLOAT(kineSpeed.z))), _VAR(0), _VAR(120), (COLOR *)vector(0, 0, _VAR(255)));
 	}
 
 	physX3->Release();
