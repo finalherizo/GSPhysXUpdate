@@ -6,6 +6,33 @@ class Stepper;
 class FixedStepper;
 class VariableStepper;
 
+/// \brief Settings for kinematic entity
+struct KineSettings
+{
+	long entityId;
+	physx::PxTransform pose;
+
+	/// \brief Kinematic settings constructor
+	KineSettings(long id, physx::PxTransform pose):
+		entityId(id),
+		pose(pose)
+	{
+	}
+
+	/// \brief Kinematic settings default constructor
+	KineSettings():
+		entityId(0),
+		pose(physx::PxTransform(physx::PxIdentity))
+	{
+	}
+
+	/// \brief Kinematic settings destructor
+	~KineSettings()
+	{
+		printf("Destructor Called");
+	}
+};
+
 /// \brief PhysX3 Utility implementation
 class PhysX3Util
 {

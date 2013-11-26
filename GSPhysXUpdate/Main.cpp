@@ -61,7 +61,7 @@ int main()
 	while(av(key_esc) == 0 && engine_frame())
 	{
 		// Step physX
-		physX3->Run(_FLOAT(av(time_frame)));
+		physX3->Run(_FLOAT(av(time_frame)) / 16);
 
 		// Get input
 		float force_x = (_FLOAT(av(key_cuu)) - _FLOAT(av(key_cud))) * 6.0f;
@@ -105,9 +105,10 @@ int main()
 
 		// Draw Actor speed
 		physx::PxVec3 actorSpeed = kine->getLinearVelocity();
-		VECTOR kineSpeed;
+		printf("K(%f, %f, %f)\n", actorSpeed.x, actorSpeed.y, actorSpeed.z);
+		VECTOR kineSpeed; 
 		physX3->PxVec3ToVec(actorSpeed, &kineSpeed);
-		draw_text(_chr(str_printf(NULL, "Speed : (%f, %f, %f)", kineSpeed.z, kineSpeed.y, kineSpeed.z)), _VAR(0), _VAR(120), (COLOR *)vector(0, 0, _VAR(255)));
+		//draw_text(_chr(str_printf(NULL, "Speed : (%f, %f, %f)", _FLOAT(kineSpeed.z), _FLOAT(kineSpeed.y), _FLOAT(kineSpeed.z))), _VAR(0), _VAR(120), (COLOR *)vector(0, 0, _VAR(255)));
 	}
 
 	physX3->Release();

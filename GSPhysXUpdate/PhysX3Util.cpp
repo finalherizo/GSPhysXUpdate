@@ -320,7 +320,7 @@ physx::PxRigidDynamic *PhysX3Util::CreateKinematic(ENTITY *entity)
 	halfExtents = halfExtents.multiply(scale);
 	
 	boxShape = boxActor->createShape(physx::PxBoxGeometry(halfExtents), *mDefaultMaterial);
-	boxActor->userData = (long *)entity->link.index;
+	boxActor->userData = new KineSettings(entity->link.index, transform);
 	
 	entity->body = boxActor;
 
@@ -341,6 +341,8 @@ void PhysX3Util::MoveKinematic(ENTITY *entity, VECTOR *disp)
 	if (NULL == kine)
 		return;
 
+	KineSettings *settings = (KineSettings *)kine->userData;
+
 	// Create global position from absolute and relative vectors
 	physx::PxVec3 localPos;
 	physx::PxTransform actorGlobalPose(physx::PxIdentity);
@@ -348,9 +350,7 @@ void PhysX3Util::MoveKinematic(ENTITY *entity, VECTOR *disp)
 	PxVec3ForVec(localPos, disp);
 		
 	// Transform relative vector to global based on actor type
-	if (kine->getKinematicTarget(actorGlobalPose) == false) {
-		actorGlobalPose = kine->getGlobalPose();
-	}
+	actorGlobalPose = settings->pose;
 
 	// Get rotated local pose
 	localPos = actorGlobalPose.q.rotate(localPos);
@@ -359,6 +359,26 @@ void PhysX3Util::MoveKinematic(ENTITY *entity, VECTOR *disp)
 	actorGlobalPose.p += localPos;
 
 	kine->setKinematicTarget(actorGlobalPose);
+
+	// Save back settings
+	settings->pose = actorGlobalPose;
+}
+
+/// \brief Move kinematics every frame
+void PhysX3Util::UpdateKinematics()
+{
+	int nbActors = mScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
+	physx::PxActor **buffer = new physx::PxActor*[nbActors];
+	mScene->getActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC, buffer, nbActors);
+
+	for (int i = 0; i < nbActors; i++)
+	{
+		KineSettings *settings = (KineSettings *)buffer[i]->userData;	
+		((physx::PxRigidDynamic *)buffer[i])->setKinematicTarget(settings->pose);
+		//printf("p(%f, %f, %f)\n", settings->pose.p.x, settings->pose.p.y, settings->pose.p.z);
+	}
+
+	delete[] buffer;
 }
 
 /// \brief Apply physX entity transform to 3dgs entity
@@ -369,7 +389,9 @@ void PhysX3Util::TransformRigidEntity(physx::PxRigidActor *actor)
 		return;
 	}
 	
-	ENTITY *entity = (ENTITY *)ptr_for_handle((long)actor->userData);
+	KineSettings *settings = (KineSettings *)actor->userData;
+
+	ENTITY *entity = (ENTITY *)ptr_for_handle(settings->entityId);
 
 	physx::PxTransform transform(actor->getGlobalPose());
 	
@@ -378,4 +400,7 @@ void PhysX3Util::TransformRigidEntity(physx::PxRigidActor *actor)
 
 	// Scale entity position
 	PxVec3ToVec(transform.p, (VECTOR*)&(entity->x));
+
+	// Save back settings
+	settings->pose = transform;
 }

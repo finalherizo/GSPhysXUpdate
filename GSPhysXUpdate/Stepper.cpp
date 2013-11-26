@@ -25,6 +25,8 @@ bool Stepper::advance(PhysX3Util *physX3, physx::PxReal dt)
 	// Move character controllers
 	for (currentSubstep = 0; currentSubstep < mNbSubSteps; currentSubstep++)
 	{
+		physX3->UpdateKinematics();
+
 		scene->simulate(mSubStepSize);
 		scene->fetchResults(true);
 	}
@@ -39,21 +41,20 @@ bool Stepper::advance(PhysX3Util *physX3, physx::PxReal dt)
 /// \param substepSize
 void FixedStepper::substepStrategy(const physx::PxReal stepSize, physx::PxU32 &substepCount, physx::PxReal &substepSize)
 {
-	if(mAccumulator > mFixedSubStepSize)
-		mAccumulator = 0.0f;
+	physx::PxReal frameTime = stepSize; // Frame time
+	if (frameTime > mFixedSubStepSize * 2)
+		frameTime = mFixedSubStepSize * 2;
 
-	// don't step less than the step size, just accumulate
-	mAccumulator  += stepSize;
-	if(mAccumulator < mFixedSubStepSize)
-	{
-		substepCount = 0;
-		return;
-	}
+	mAccumulator += frameTime;
 
-	substepSize = mFixedSubStepSize;
-	substepCount = physx::PxMin<physx::PxU32>(physx::PxU32(mAccumulator/mFixedSubStepSize), mMaxSubSteps);
+	substepSize = mFixedSubStepSize; // dt
+	substepCount = physx::PxMax((physx::PxU32)(mAccumulator / mFixedSubStepSize), physx::PxU32(0));
 
 	mAccumulator -= physx::PxReal(substepCount)*substepSize;
+
+	// Alpha calculations
+	physx::PxReal alpha = mAccumulator / mFixedSubStepSize;
+	//printf("a(%.2f)\tf(%.3f)\ts(%d)\n", alpha, mFixedSubStepSize, substepCount);
 }
 
 /// \brief Setup Variable Stepper SubstepStrategy
