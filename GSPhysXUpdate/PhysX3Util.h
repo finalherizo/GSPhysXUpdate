@@ -11,18 +11,24 @@ struct KineSettings
 {
 	long entityId;
 	physx::PxTransform pose;
+	physx::PxVec3 linearVelocity;
+	physx::PxVec3 angularVelocity;
 
 	/// \brief Kinematic settings constructor
 	KineSettings(long id, physx::PxTransform pose):
 		entityId(id),
-		pose(pose)
+		pose(pose),
+		linearVelocity(physx::PxVec3(physx::PxIdentity)),
+		angularVelocity(physx::PxVec3(physx::PxIdentity))
 	{
 	}
 
 	/// \brief Kinematic settings default constructor
 	KineSettings():
 		entityId(0),
-		pose(physx::PxTransform(physx::PxIdentity))
+		pose(physx::PxTransform(physx::PxIdentity)),
+		linearVelocity(physx::PxVec3(physx::PxIdentity)),
+		angularVelocity(physx::PxVec3(physx::PxIdentity))
 	{
 	}
 
@@ -89,7 +95,8 @@ public:
 	void CreateGroundPlane();
 	physx::PxRigidDynamic *CreateKinematic(ENTITY *entity);
 	void MoveKinematic(ENTITY *entity, VECTOR *disp);
-	void UpdateKinematics();
+	void RotateKinematic(ENTITY *entity, ANGLE *disp);
+	void UpdateKinematics(physx::PxReal factor = 1.0f);
 
 	/// \brief Populate a pre initialized 3dgs vector from a PxVec3
 	///

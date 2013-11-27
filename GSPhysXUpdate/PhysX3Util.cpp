@@ -359,13 +359,40 @@ void PhysX3Util::MoveKinematic(ENTITY *entity, VECTOR *disp)
 	actorGlobalPose.p += localPos;
 
 	kine->setKinematicTarget(actorGlobalPose);
+	// Save back settings
+	settings->pose = actorGlobalPose;
+}
 
+/// \brief Move a kinematic body
+void PhysX3Util::RotateKinematic(ENTITY *entity, ANGLE *disp)
+{
+	// Get entity's actor
+	physx::PxRigidDynamic *kine = (physx::PxRigidDynamic *) entity->body;
+
+	if (NULL == kine)
+		return;
+
+	KineSettings *settings = (KineSettings *)kine->userData;
+
+	// Create global position from absolute and relative vectors
+	physx::PxQuat localRot;
+	physx::PxTransform actorGlobalPose(physx::PxIdentity);
+
+	PxQuatForAng(localRot, disp);
+		
+	// Transform relative vector to global based on actor type
+	actorGlobalPose = settings->pose;
+
+	// Add Localpose to Global pose
+	actorGlobalPose.q *= localRot;
+
+	kine->setKinematicTarget(actorGlobalPose);
 	// Save back settings
 	settings->pose = actorGlobalPose;
 }
 
 /// \brief Move kinematics every frame
-void PhysX3Util::UpdateKinematics()
+void PhysX3Util::UpdateKinematics(physx::PxReal factor)
 {
 	int nbActors = mScene->getNbActors(physx::PxActorTypeFlag::eRIGID_DYNAMIC);
 	physx::PxActor **buffer = new physx::PxActor*[nbActors];
@@ -374,8 +401,29 @@ void PhysX3Util::UpdateKinematics()
 	for (int i = 0; i < nbActors; i++)
 	{
 		KineSettings *settings = (KineSettings *)buffer[i]->userData;	
-		((physx::PxRigidDynamic *)buffer[i])->setKinematicTarget(settings->pose);
+		physx::PxRigidDynamic *kine = (physx::PxRigidDynamic *)(buffer[i]);
+		kine->setKinematicTarget(settings->pose);
 		//printf("p(%f, %f, %f)\n", settings->pose.p.x, settings->pose.p.y, settings->pose.p.z);
+
+		physx::PxVec3 velocity = kine->getLinearVelocity();
+		// Pick only the speed if above threshold
+		if (velocity != physx::PxVec3(0) && velocity.magnitudeSquared() > 0.00005) {
+			settings->linearVelocity = velocity * factor;
+		}
+		else {
+			settings->linearVelocity = physx::PxVec3(physx::PxIdentity);
+		}
+		//physx::PxVec3 localVelocity = physx::PxRigidBodyExt::getLocalVelocityAtLocalPos(*kine, physx::PxVec3(100, 100, 100));
+		//printf("l(%f); v(%f, %f, %f); lv(%f, %f, %f); f(%f)\n", settings->linearVelocity.magnitudeSquared(), settings->linearVelocity.x, settings->linearVelocity.y, settings->linearVelocity.z, localVelocity.x, localVelocity.y, localVelocity.z, factor);
+
+		physx::PxVec3 angularVelocity = kine->getAngularVelocity();
+		// Pick only the speed if above threshold
+		//if (velocity != physx::PxVec3(0) && angulerVelocity.magnitudeSquared() > 0.00005) {
+		settings->angularVelocity = angularVelocity * factor;
+		//}
+		//else {
+		//	settings->angularVelocity = physx::PxVec3(physx::PxIdentity);
+		//}
 	}
 
 	delete[] buffer;
@@ -402,5 +450,9 @@ void PhysX3Util::TransformRigidEntity(physx::PxRigidActor *actor)
 	PxVec3ToVec(transform.p, (VECTOR*)&(entity->x));
 
 	// Save back settings
+	/*if (settings->pose.p == transform.p)
+	{
+		settings->linearVelocity = physx::PxVec3(physx::PxIdentity);
+	}*/
 	settings->pose = transform;
 }

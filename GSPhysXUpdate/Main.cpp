@@ -22,6 +22,7 @@ int main()
 	txt_addstring(txtHelp, "3 :\t\tLimit FPS to 30");
 	txt_addstring(txtHelp, "4 :\t\tLimit FPS to 60");
 	txt_addstring(txtHelp, "5 :\t\tLimit FPS to Max");
+	txt_addstring(txtHelp, "6 :\t\tLimit FPS to 20");
 
 	// Update mode
 	TEXT *txtUpdate = txt_create(0, 1);
@@ -90,6 +91,10 @@ int main()
 		{
 			av(fps_max) = 0;
 		}
+		else if (av(key_6))
+		{
+			av(fps_max) = _VAR(20);
+		}
 
 		// Create movement vector
 		vecForce.x = _VAR(force_x);
@@ -99,16 +104,28 @@ int main()
 		// Move kinematic
 		physX3->MoveKinematic(kinematicEnt, &vecMove);
 
+		// Rotate
+		physx::PxReal rotation = _FLOAT(av(key_r) - av(key_t)) * 20 * _FLOAT(av(time_step));
+		physX3->RotateKinematic(kinematicEnt, (ANGLE *)vector(_VAR(rotation), 0, 0));
+
 		// Draw FPS
 		fps = 0.9f * fps + 0.1f / _FLOAT(av(time_frame)) * 16;
 		draw_text(_chr(str_printf(NULL, "FPS : %d", (int)fps)), _VAR(0), _VAR(100), (COLOR *)vector(0, 0, _VAR(255)));
 
 		// Draw Actor speed
-		physx::PxVec3 actorSpeed = kine->getLinearVelocity();
-		printf("K(%f, %f, %f)\n", actorSpeed.x, actorSpeed.y, actorSpeed.z);
+		KineSettings *settings = (KineSettings *)kine->userData;
+		physx::PxVec3 actorSpeed = settings->linearVelocity;
+		//printf("K(%f, %f, %f)\n", actorSpeed.x, actorSpeed.y, actorSpeed.z);
 		VECTOR kineSpeed; 
 		physX3->PxVec3ToVec(actorSpeed, &kineSpeed);
 		draw_text(_chr(str_printf(NULL, "Speed : (%f, %f, %f)", _FLOAT(kineSpeed.x), _FLOAT(kineSpeed.y), _FLOAT(kineSpeed.z))), _VAR(0), _VAR(120), (COLOR *)vector(0, 0, _VAR(255)));
+
+		// Draw Actor angular speed
+		physx::PxVec3 actorAngularSpeed = settings->angularVelocity;
+		//printf("K(%f, %f, %f)\n", actorSpeed.x, actorSpeed.y, actorSpeed.z);
+		VECTOR kineAngularSpeed; 
+		physX3->PxVec3ToVec(actorAngularSpeed, &kineAngularSpeed);
+		draw_text(_chr(str_printf(NULL, "Angular Speed : (%f, %f, %f)", _FLOAT(kineAngularSpeed.x), _FLOAT(kineAngularSpeed.y), _FLOAT(kineAngularSpeed.z))), _VAR(0), _VAR(140), (COLOR *)vector(0, 0, _VAR(255)));
 	}
 
 	physX3->Release();

@@ -25,7 +25,8 @@ bool Stepper::advance(PhysX3Util *physX3, physx::PxReal dt)
 	// Move character controllers
 	for (currentSubstep = 0; currentSubstep < mNbSubSteps; currentSubstep++)
 	{
-		physX3->UpdateKinematics();
+		physx::PxReal factor = physx::PxMin((mSubStepSize/dt), 1.0f);
+		physX3->UpdateKinematics(factor);
 
 		scene->simulate(mSubStepSize);
 		scene->fetchResults(true);
@@ -46,7 +47,7 @@ void FixedStepper::substepStrategy(const physx::PxReal stepSize, physx::PxU32 &s
 		frameTime = mFixedSubStepSize * 2;
 
 	mAccumulator += frameTime;
-
+	
 	substepSize = mFixedSubStepSize; // dt
 	substepCount = physx::PxMax((physx::PxU32)(mAccumulator / mFixedSubStepSize), physx::PxU32(0));
 
